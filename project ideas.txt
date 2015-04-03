@@ -1,0 +1,10 @@
+Computer Vision / PL Ideas
+
+ - whiteboard analysis?
+ - visual programming...?
+ - watching screen stream... take actions to help user?
+ - verify something?
+ - synthesize something?
+ - apply SMT to vision?
+ - UI programming:
+    detecting hand-drawn UI elements
