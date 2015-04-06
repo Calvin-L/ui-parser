@@ -1,0 +1,14 @@
+
+This document lists some example inputs I intend to collect. These will form
+the example set that I'll use to test my algorithms.
+
+01. blank
+02. title
+03. title + paragraph
+04. header + title + paragraph + footer
+05. title + (left nav) + (right paragraph)
+06. title + (left float image) + paragraph
+07. title + paragraph + (3x image, laid horizontally)
+08. lightbox
+09. title + 5em space + paragraph
+10. grid
