@@ -2,11 +2,10 @@
 PDFLATEX=pdflatex -interaction batchmode
 .PHONY: all clean
 
-all: proposal.pdf
+all: docs/proposal.pdf
 
 %.aux %.log %.pdf: %.tex
-	$(PDFLATEX) proposal
-	$(PDFLATEX) proposal
+	cd $$(dirname $<) && $(PDFLATEX) $$(basename $<) && $(PDFLATEX) $$(basename $<)
 
 clean:
-	rm *.aux *.pdf *.log
+	$(RM) docs/*.aux docs/*.pdf docs/*.log
