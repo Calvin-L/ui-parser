@@ -9,7 +9,7 @@ PDFLATEX=pdflatex -interaction batchmode
 # misc
 .PHONY: all clean
 CXXFLAGS=-Os -Wall -pedantic -fwrapv -pipe -std=c++11
-CXXFLAGS+=$(shell pkg-config --cflags $(PKG_CONFIG_PACKAGES))
+CXXFLAGS+=$(shell pkg-config --cflags-only-I $(PKG_CONFIG_PACKAGES))
 LDFLAGS+=$(shell pkg-config --libs $(PKG_CONFIG_PACKAGES))
 
 all: docs/proposal.pdf parse-layout
