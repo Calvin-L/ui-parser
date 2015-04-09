@@ -3,12 +3,16 @@ This document lists some example inputs I intend to collect. These will form
 the example set that I'll use to test my algorithms.
 
 01. blank
-02. title
-03. title + paragraph
-04. header + title + paragraph + footer
-05. title + (left nav) + (right paragraph)
-06. title + (left float image) + paragraph
-07. title + paragraph + (3x image, laid horizontally)
-08. lightbox
-09. title + 5em space + paragraph
-10. grid
+02. 2x horizontal boxes
+03. 2x horizontal boxes (with measurements)
+04. 3x vertical boxes
+05. 3x vertical boxes (with measurements)
+06. title
+07. title + paragraph
+08. header + title + paragraph + footer
+09. title + (left nav) + (right paragraph)
+10. title + (left float image) + paragraph
+11. title + paragraph + (3x image, laid horizontally)
+12. lightbox
+13. title + 5em space + paragraph
+14. grid
