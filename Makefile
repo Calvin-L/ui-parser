@@ -1,15 +1,16 @@
 
 # input files
 SOURCES=$(shell find src -iname '*.cpp')
-PACKAGES=tesseract opencv
+PKG_CONFIG_PACKAGES=tesseract opencv
 
 # tools
 PDFLATEX=pdflatex -interaction batchmode
 
 # misc
 .PHONY: all clean
-CXXFLAGS=$(shell pkg-config --cflags $(PACKAGES)) -Os -Wall -pedantic -fwrapv
-LDFLAGS=$(shell pkg-config --libs $(PACKAGES))
+CXXFLAGS=-Os -Wall -pedantic -fwrapv -pipe
+CXXFLAGS+=$(shell pkg-config --cflags $(PKG_CONFIG_PACKAGES))
+LDFLAGS+=$(shell pkg-config --libs $(PKG_CONFIG_PACKAGES))
 
 all: docs/proposal.pdf parse-layout
 
