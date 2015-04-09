@@ -1,14 +1,14 @@
 
 # input files
 SOURCES=$(shell find src -iname '*.cpp')
-PKG_CONFIG_PACKAGES=tesseract opencv
+PKG_CONFIG_PACKAGES=tesseract opencv lept
 
 # tools
 PDFLATEX=pdflatex -interaction batchmode
 
 # misc
 .PHONY: all clean
-CXXFLAGS=-Os -Wall -pedantic -fwrapv -pipe
+CXXFLAGS=-Os -Wall -pedantic -fwrapv -pipe -std=c++11
 CXXFLAGS+=$(shell pkg-config --cflags $(PKG_CONFIG_PACKAGES))
 LDFLAGS+=$(shell pkg-config --libs $(PKG_CONFIG_PACKAGES))
 
