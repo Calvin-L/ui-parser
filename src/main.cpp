@@ -3,6 +3,7 @@
 #include <vector>
 #include <set>
 #include <cmath>
+#include <algorithm>
 
 // #include <tesseract/baseapi.h>
 // #include <leptonica/allheaders.h>
@@ -10,89 +11,11 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
+#include "UnionFind.hpp"
+#include "geometry.hpp"
+
 using namespace std;
 using namespace cv;
-
-class UnionFind {
-public:
-    UnionFind(size_t count) {
-        parents.reserve(count);
-        for (size_t i = 0; i < count; ++i) {
-            parents.push_back(i); // every node links to itself
-        }
-    }
-    size_t find(size_t x) {
-        while (parents[x] != x) {
-            x = parents[x];
-        }
-        return x;
-    }
-    void join(size_t x, size_t y) {
-        x = find(x);
-        y = find(y);
-        parents[x] = y;
-    }
-private:
-    vector<size_t> parents;
-};
-
-template <class T, class F>
-vector<T> merge(vector<T> v, F similar) {
-    UnionFind uf(v.size());
-
-    for (size_t i = 0; i < v.size(); ++i) {
-        for (size_t j = i + 1; j < v.size(); ++j) {
-            if (similar(v[i], v[j])) {
-                uf.join(i, j);
-            }
-        }
-    }
-
-    set<size_t> seen;
-    size_t newEnd = 1;
-    size_t end = 1;
-    seen.insert(uf.find(0));
-    for (; end < v.size(); ++end) {
-        size_t set = uf.find(end);
-        if (seen.find(set) == seen.end()) {
-            seen.insert(set);
-            v[newEnd] = v[end];
-            ++newEnd;
-        }
-    }
-
-    v.erase(v.begin() + newEnd, v.end());
-
-    return v;
-}
-
-float anglediff(float a1, float a2) {
-    float diff = a1 - a2;
-    if (diff > M_PI) {
-        diff -= 2*M_PI;
-    } else if (diff < -M_PI) {
-        diff += 2*M_PI;
-    }
-    return diff;
-}
-
-void fix(Vec2f& v) {
-    if (v[0] < 1) {
-        v[0] = abs(v[0]);
-        v[1] += M_PI;
-        if (v[1] > M_PI) {
-            v[1] -= M_PI * 2;
-        }
-    }
-}
-
-bool tooClose(Vec2f l1, Vec2f l2) {
-    fix(l1);
-    fix(l2);
-    return
-        abs(l2[0] - l1[0]) < 50 &&
-        abs(anglediff(l2[1], l1[1])) < M_PI / 10;
-}
 
 template <class T>
 ostream& operator<<(ostream& out, vector<T> v) {
@@ -102,6 +25,30 @@ ostream& operator<<(ostream& out, vector<T> v) {
         out << v[i];
     }
     return out << ']';
+}
+
+Mat cleanup(Mat m, unsigned char thresh) {
+    for (int row = 0; row < m.rows; ++row) {
+        for (int col = 0; col < m.cols; ++col) {
+            unsigned char& val = m.at<unsigned char>(row, col);
+            val = val < thresh ? 0 : 0xff;
+        }
+    }
+    return m;
+}
+
+bool segmentsTooClose(const Vec4i& v1, const Vec4i& v2) {
+    auto vd1 = dirOf(v1);
+    auto vd2 = dirOf(v2);
+    double d = abs(vd1.ddot(vd2) / (norm(vd1) * norm(vd2)));
+    return d >= 0.6 && closestApproach(v1, v2) < 15.0;
+}
+
+Vec4i mergeLines(const vector<Vec4i>& lines) {
+    double avgangle = 0;
+    for (const auto& l : lines) { avgangle += nonDirectionalAngleOf(l); }
+    avgangle /= lines.size();
+    return lines[0];
 }
 
 int main(int argc, char** argv) {
@@ -114,31 +61,42 @@ int main(int argc, char** argv) {
     const char* file = argv[1];
 
     Mat input = imread(file, CV_LOAD_IMAGE_GRAYSCALE);
+
+    if (input.size().width <= 0 || input.size().height <= 0) {
+        cerr << "failed to read image '" << file << '\'' << endl;
+        return 1;
+    }
+
     imshow("input", input);
 
     Mat dst, display;
     // Canny(input, dst, 50, 200, 3);
     dst = Scalar::all(255) - input;
+    dst = cleanup(dst, 10);
     cvtColor(dst, display, CV_GRAY2BGR);
 
-    vector<Vec2f> lines;
-    HoughLines(dst, lines, 1, CV_PI/180, 100, 0, 0);
+    vector<Vec4i> lines;
 
-    cout << tooClose(Vec2f(150, 0.0349066), Vec2f(162, 0.0523599)) << endl;
-    cout << lines << endl;
-    lines = merge(lines, tooClose);
-    cout << lines << endl;
-    cout.flush();
-    for (const auto& l : lines) {
-        float rho = l[0], theta = l[1];
-        double a = cos(theta), b = sin(theta);
-        double x0 = a*rho, y0 = b*rho;
-        Point pt1, pt2;
-        pt1.x = cvRound(x0 + 1000*(-b));
-        pt1.y = cvRound(y0 + 1000*(a));
-        pt2.x = cvRound(x0 - 1000*(-b));
-        pt2.y = cvRound(y0 - 1000*(a));
-        line(display, pt1, pt2, Scalar(0,0,255), 3, CV_AA);
+    HoughLinesP(dst, lines, 1, TAU/360, 10, 10, 25);
+
+    auto groups = group(lines, segmentsTooClose);
+
+    cout << groups.size() << endl;
+    for (auto& g : groups) {
+        cout << "  " << g.size() << endl;
+    }
+
+    lines.clear();
+    transform(groups.begin(), groups.end(), lines.begin(), mergeLines);
+
+    for (const auto& g : groups) {
+        Scalar color = cv::Scalar(rand() % 255, rand() % 255, rand() % 100 + 155);
+        for (const auto& l : g) {
+            line(display,
+                Point(l[0], l[1]),
+                Point(l[2], l[3]),
+                color, 3, CV_AA);
+        }
     }
 
     imshow("output", display);
