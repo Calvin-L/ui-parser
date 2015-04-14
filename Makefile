@@ -20,7 +20,7 @@ parse-layout: $(SOURCES:.cpp=.o)
 	$(CXX) $(LDFLAGS) $^ -o $@
 
 %.d: %.cpp
-	$(CPP) -M $< -o $@
+	$(CPP) -M -MP -MT $(<:.cpp=.o) $< | sed -E 's_^([^:]+):_\1 $(@:.o=.d):_' >$@
 
 %.aux %.log %.pdf: %.tex
 	cd $$(dirname $<) && $(PDFLATEX) $$(basename $<) && $(PDFLATEX) $$(basename $<)
