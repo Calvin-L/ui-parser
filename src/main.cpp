@@ -41,7 +41,7 @@ bool segmentsTooClose(const Vec4i& v1, const Vec4i& v2) {
     auto vd1 = dirOf(v1);
     auto vd2 = dirOf(v2);
     double d = abs(vd1.ddot(vd2) / (norm(vd1) * norm(vd2)));
-    return d >= 0.6 && closestApproach(v1, v2) < 15.0;
+    return d >= 0.8 && closestApproach(v1, v2) < 10.0;
 }
 
 Vec4i mergeLines(const vector<Vec4i>& lines) {
@@ -77,7 +77,7 @@ int main(int argc, char** argv) {
 
     vector<Vec4i> lines;
 
-    HoughLinesP(dst, lines, 1, TAU/360, 10, 10, 25);
+    HoughLinesP(dst, lines, 1, TAU/360, 20, 10, 25);
 
     auto groups = group(lines, segmentsTooClose);
 
