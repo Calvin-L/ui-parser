@@ -3,6 +3,7 @@
 #include <vector>
 #include <set>
 #include <cmath>
+#include <cstring>
 #include <algorithm>
 
 // #include <tesseract/baseapi.h>
@@ -44,11 +45,82 @@ bool segmentsTooClose(const Vec4i& v1, const Vec4i& v2) {
     return d >= 0.8 && closestApproach(v1, v2) < 10.0;
 }
 
+double dominantAngle(const vector<Vec4i>& lines, int nbuckets = 8) {
+    int topBucket = 0;
+    vector<int> buckets(nbuckets, 0);
+
+    for (auto& l : lines) {
+        double angle = angleOf(l);
+        if (angle < 0) angle += TAU;
+        for (int k = 0; k < 2; ++k) {
+            int bucket = 0;
+            for (; bucket < nbuckets; ++bucket) {
+                if (bucket * (TAU/nbuckets) + (TAU/nbuckets/2) > angle) break;
+            }
+            if (bucket == nbuckets) {
+                bucket = 0;
+            }
+            ++buckets[bucket];
+            if (buckets[bucket] > buckets[topBucket]) {
+                topBucket = bucket;
+            }
+            angle -= TAU/2;
+        }
+    }
+    return topBucket * (TAU/nbuckets);
+}
+
 Vec4i mergeLines(const vector<Vec4i>& lines) {
-    double avgangle = 0;
-    for (const auto& l : lines) { avgangle += nonDirectionalAngleOf(l); }
-    avgangle /= lines.size();
-    return lines[0];
+    double angle = dominantAngle(lines);
+    double dx = cos(angle);
+    double dy = sin(angle);
+    double minScore, maxScore;
+    int worstX = 0, worstY = 0, bestX = 0, bestY = 0;
+    bool first = true;
+    for (auto& l : lines) {
+        int x0 = l[0];
+        int y0 = l[1];
+        int x1 = l[2];
+        int y1 = l[3];
+
+        double norm0 = sqrt(x0*x0 + y0*y0);
+        double norm1 = sqrt(x1*x1 + y1*y1);
+
+        // TODO: these need lots of tweaking...
+        // Right now they measure how closely the vector (x,y) matches (dx,dy),
+        // which is not right! Somehow we need to normalize for position of the
+        // line.
+        double score0 = (x0 * dx + y0 * dy) / norm0;
+        double score1 = (x1 * dx + y1 * dy) / norm1;
+
+        if (score0 > score1) {
+            swap(score0, score1);
+            swap(x0, x1);
+            swap(y0, y1);
+        }
+
+        if (first) {
+            minScore = score0;
+            maxScore = score1;
+            worstX = x0;
+            worstY = y0;
+            bestX = x1;
+            bestY = y1;
+            first = false;
+        } else {
+            if (score0 < minScore) {
+                minScore = score0;
+                worstX = x0;
+                worstY = y0;
+            }
+            if (score1 > maxScore) {
+                maxScore = score1;
+                bestX = x0;
+                bestY = y0;
+            }
+        }
+    }
+    return Vec4i(worstX, worstY, bestX, bestY);
 }
 
 int main(int argc, char** argv) {
@@ -73,7 +145,6 @@ int main(int argc, char** argv) {
     // Canny(input, dst, 50, 200, 3);
     dst = Scalar::all(255) - input;
     dst = cleanup(dst, 10);
-    cvtColor(dst, display, CV_GRAY2BGR);
 
     vector<Vec4i> lines;
 
@@ -81,14 +152,16 @@ int main(int argc, char** argv) {
 
     auto groups = group(lines, segmentsTooClose);
 
+    lines.clear();
     cout << groups.size() << endl;
     for (auto& g : groups) {
-        cout << "  " << g.size() << endl;
+        Vec4i l = mergeLines(g);
+        lines.push_back(l);
+        cout << "  " << g.size() << "  \t" << l << "  \t(theta=" << dominantAngle(g) << ')' << endl;
     }
 
-    lines.clear();
-    transform(groups.begin(), groups.end(), lines.begin(), mergeLines);
-
+    cvtColor(dst, display, CV_GRAY2BGR);
+    srand(0);
     for (const auto& g : groups) {
         Scalar color = cv::Scalar(rand() % 255, rand() % 255, rand() % 100 + 155);
         for (const auto& l : g) {
@@ -98,8 +171,18 @@ int main(int argc, char** argv) {
                 color, 3, CV_AA);
         }
     }
+    imshow("grouping", display);
 
-    imshow("output", display);
+    srand(0);
+    cvtColor(dst, display, CV_GRAY2BGR);
+    for (const auto& l : lines) {
+        Scalar color = cv::Scalar(rand() % 255, rand() % 255, rand() % 100 + 155);
+        line(display,
+            Point(l[0], l[1]),
+            Point(l[2], l[3]),
+            color, 3, CV_AA);
+    }
+    imshow("lines", display);
 
     waitKey(0);
 

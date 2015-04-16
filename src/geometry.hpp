@@ -96,14 +96,6 @@ double angleOf(const cv::Vec<T,4>& v) {
     return atan2(v[3] - v[1], v[2] - v[0]);
 }
 
-/** in range [0, TAU/2] */
-template <class T>
-double nonDirectionalAngleOf(const cv::Vec<T,4>& v) {
-    double theta = angleOf(v);
-    if (theta < 0) theta += TAU/2;
-    return theta;
-}
-
 float anglediff(float a1, float a2);
 
 #endif

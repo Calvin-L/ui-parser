@@ -32,7 +32,7 @@ std::vector<std::vector<T>> group(std::vector<T> v, F similar) {
         int group = idxmap[set];
         if (group < 0) {
             idxmap[set] = vs.size();
-            vs.emplace_back( std::vector<T> { v[i] } );
+            vs.emplace_back(1, v[i]);
         } else {
             vs[group].push_back(v[i]);
         }
