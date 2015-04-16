@@ -5,6 +5,7 @@
 #include <cmath>
 #include <cstring>
 #include <algorithm>
+#include <utility>
 
 // #include <tesseract/baseapi.h>
 // #include <leptonica/allheaders.h>
@@ -70,28 +71,35 @@ double dominantAngle(const vector<Vec4i>& lines, int nbuckets = 8) {
     return topBucket * (TAU/nbuckets);
 }
 
-Vec4i mergeLines(const vector<Vec4i>& lines) {
-    double angle = dominantAngle(lines);
-    double dx = cos(angle);
-    double dy = sin(angle);
+Vec2d centroid(const vector<Vec4i>& lines) {
+    double x = 0;
+    double y = 0;
+    for (auto& l : lines) {
+        x += l[0] + l[2];
+        y += l[1] + l[3];
+    }
+    x /= lines.size() * 2;
+    y /= lines.size() * 2;
+    return Vec2d(x, y);
+}
+
+pair<Vec4i, double> mergeLines(const vector<Vec4i>& lines) {
+    const Vec2d center = centroid(lines);
+    const double angle = dominantAngle(lines);
+    const double dx = cos(angle);
+    const double dy = sin(angle);
     double minScore, maxScore;
     int worstX = 0, worstY = 0, bestX = 0, bestY = 0;
     bool first = true;
     for (auto& l : lines) {
-        int x0 = l[0];
-        int y0 = l[1];
-        int x1 = l[2];
-        int y1 = l[3];
+        int x0 = l[0] - center[0];
+        int y0 = l[1] - center[1];
+        int x1 = l[2] - center[0];
+        int y1 = l[3] - center[1];
 
-        double norm0 = sqrt(x0*x0 + y0*y0);
-        double norm1 = sqrt(x1*x1 + y1*y1);
-
-        // TODO: these need lots of tweaking...
-        // Right now they measure how closely the vector (x,y) matches (dx,dy),
-        // which is not right! Somehow we need to normalize for position of the
-        // line.
-        double score0 = (x0 * dx + y0 * dy) / norm0;
-        double score1 = (x1 * dx + y1 * dy) / norm1;
+        // TODO: tweak these
+        double score0 = (x0 * dx + y0 * dy);
+        double score1 = (x1 * dx + y1 * dy);
 
         if (score0 > score1) {
             swap(score0, score1);
@@ -115,12 +123,18 @@ Vec4i mergeLines(const vector<Vec4i>& lines) {
             }
             if (score1 > maxScore) {
                 maxScore = score1;
-                bestX = x0;
-                bestY = y0;
+                bestX = x1;
+                bestY = y1;
             }
         }
     }
-    return Vec4i(worstX, worstY, bestX, bestY);
+    return make_pair(
+        Vec4i(
+            worstX + center[0],
+            worstY + center[1],
+            bestX  + center[0],
+            bestY  + center[1]),
+        angle);
 }
 
 int main(int argc, char** argv) {
@@ -152,18 +166,10 @@ int main(int argc, char** argv) {
 
     auto groups = group(lines, segmentsTooClose);
 
-    lines.clear();
-    cout << groups.size() << endl;
-    for (auto& g : groups) {
-        Vec4i l = mergeLines(g);
-        lines.push_back(l);
-        cout << "  " << g.size() << "  \t" << l << "  \t(theta=" << dominantAngle(g) << ')' << endl;
-    }
-
     cvtColor(dst, display, CV_GRAY2BGR);
     srand(0);
     for (const auto& g : groups) {
-        Scalar color = cv::Scalar(rand() % 255, rand() % 255, rand() % 100 + 155);
+        Scalar color = Scalar(rand() % 255, rand() % 255, rand() % 100 + 155);
         for (const auto& l : g) {
             line(display,
                 Point(l[0], l[1]),
@@ -174,13 +180,24 @@ int main(int argc, char** argv) {
     imshow("grouping", display);
 
     srand(0);
+    cout << groups.size() << endl;
     cvtColor(dst, display, CV_GRAY2BGR);
-    for (const auto& l : lines) {
-        Scalar color = cv::Scalar(rand() % 255, rand() % 255, rand() % 100 + 155);
+    for (const auto& g : groups) {
+        auto info = mergeLines(g);
+        Vec4i l = info.first;
+        double angle = info.second;
+        lines.push_back(l);
+        cout << "  " << g.size() << "  \t" << l << "  \t(theta=" << dominantAngle(g) << ')' << endl;
+        Scalar color = Scalar(rand() % 255, rand() % 255, rand() % 100 + 155);
+        auto center = centroid(g);
         line(display,
             Point(l[0], l[1]),
             Point(l[2], l[3]),
             color, 3, CV_AA);
+        line(display,
+            Point(center[0], center[1]),
+            Point(center[0] + cos(angle)*20, center[1] + sin(angle)*20),
+            Scalar(0, 0xff, 0), 2, CV_AA);
     }
     imshow("lines", display);
 
