@@ -7,8 +7,8 @@
 #include <algorithm>
 #include <utility>
 
-// #include <tesseract/baseapi.h>
-// #include <leptonica/allheaders.h>
+#include <tesseract/baseapi.h>
+#include <leptonica/allheaders.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -160,6 +160,46 @@ int main(int argc, char** argv) {
     dst = Scalar::all(255) - input;
     dst = cleanup(dst, 10);
 
+    // OCR
+    {
+        tesseract::TessBaseAPI ocr;
+
+        if (ocr.Init(NULL, "eng" /*, tesseract::OEM_TESSERACT_CUBE_COMBINED */)) {
+            cerr << "Could not initialize tesseract." << endl;
+            return 1;
+        }
+
+        Mat txt = Scalar::all(255) - dst;
+        Mat draw;
+        cvtColor(txt, draw, CV_GRAY2BGR);
+
+        ocr.SetPageSegMode(tesseract::PSM_SPARSE_TEXT);
+        ocr.SetVariable("tessedit_char_whitelist", "0123456789px% .-");
+        ocr.SetImage(txt.data, txt.size().width, txt.size().height, txt.step[1], txt.step[0]);
+        Boxa* boxes = ocr.GetComponentImages(tesseract::RIL_TEXTLINE, true, NULL, NULL);
+        printf("Found %d textline image components.\n", boxes->n);
+        for (int i = 0; i < boxes->n; i++) {
+            BOX* box = boxaGetBox(boxes, i, L_CLONE);
+            ocr.SetRectangle(box->x, box->y, box->w, box->h);
+            const char* ocrResult = ocr.GetUTF8Text();
+            int conf = ocr.MeanTextConf();
+            fprintf(stdout, "Box[%d]: x=%d, y=%d, w=%d, h=%d, confidence: %d, text: %s",
+                i, box->x, box->y, box->w, box->h, conf, ocrResult);
+
+            Scalar color = Scalar(rand() % 255, rand() % 100 + 155, rand() % 255);
+            rectangle(draw, Point(box->x, box->y), Point(box->x + box->w, box->y + box->h), color);
+
+            putText(draw, ocrResult, Point(box->x + box->w + 1, box->y + box->h + 1), FONT_HERSHEY_SIMPLEX, 0.5, Scalar::all(0), 1);
+            putText(draw, ocrResult, Point(box->x + box->w, box->y + box->h), FONT_HERSHEY_SIMPLEX, 0.5, color, 1);
+
+            delete[] ocrResult;
+        }
+        boxaDestroy(&boxes);
+
+        imshow("text recoginition", draw);
+    }
+
+
     vector<Vec4i> lines;
 
     HoughLinesP(dst, lines, 1, TAU/360, 20, 10, 25);
@@ -202,71 +242,6 @@ int main(int argc, char** argv) {
     imshow("lines", display);
 
     waitKey(0);
-
-#if 0
-    tesseract::TessBaseAPI ocr;
-
-    if (ocr.Init(NULL, "eng")) {
-        cerr << "Could not initialize tesseract." << endl;
-        return 1;
-    }
-
-    Pix* image = pixRead(file);
-
-    cout << "Image stats:" << endl;
-    cout << "  size        = " << image->w << 'x' << image->h << endl;
-    cout << "  depth/pixel = " << image->d << endl;
-    cout << "  channels    = " << image->spp << endl;
-
-    ocr.SetImage(image);
-
-#if 0
-    // ocr.SetRectangle(136, 156, 130, 92);
-    const char* text = ocr.GetUTF8Text();
-    cout << "Read text: '" << text << '\'' << endl;
-    const char* p = text;
-    while (*p) {
-        printf("%02x ", (int)(*p));
-        ++p;
-    }
-    cout << endl;
-    delete[] text;
-#endif
-
-#if 1
-    ocr.Recognize(0);
-    auto ri = ocr.GetIterator();
-    tesseract::PageIteratorLevel level = tesseract::RIL_WORD;
-    if (ri != 0) {
-        do {
-            const char* word = ri->GetUTF8Text(level);
-            float conf = ri->Confidence(level);
-            int x1, y1, x2, y2;
-            ri->BoundingBox(level, &x1, &y1, &x2, &y2);
-            printf("word: '%s';  \tconf: %.2f; BoundingBox: %d,%d,%d,%d;\n",
-                word, conf, x1, y1, x2-x1, y2-y1);
-            delete[] word;
-        } while (ri->Next(level));
-    }
-#endif
-
-#if 0
-    Boxa* boxes = ocr.GetComponentImages(tesseract::RIL_TEXTLINE, true, NULL, NULL);
-    printf("Found %d textline image components.\n", boxes->n);
-    for (int i = 0; i < boxes->n; i++) {
-        BOX* box = boxaGetBox(boxes, i, L_CLONE);
-        ocr.SetRectangle(box->x, box->y, box->w, box->h);
-        const char* ocrResult = ocr.GetUTF8Text();
-        int conf = ocr.MeanTextConf();
-        fprintf(stdout, "Box[%d]: x=%d, y=%d, w=%d, h=%d, confidence: %d, text: %s",
-            i, box->x, box->y, box->w, box->h, conf, ocrResult);
-        delete[] ocrResult;
-    }
-#endif
-
-    ocr.End();
-    pixDestroy(&image);
-#endif
 
     return 0;
 
