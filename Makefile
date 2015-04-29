@@ -9,8 +9,9 @@ PDFLATEX=pdflatex -interaction nonstopmode
 
 # misc
 .PHONY: all clean
-CXXFLAGS=-Os -Wall -pedantic -fwrapv -pipe -std=c++11
+CXXFLAGS=-Os -Wall -pedantic -fwrapv -pipe -std=c++11 -stdlib=libc++
 CXXFLAGS+=$(shell pkg-config --cflags-only-I $(PKG_CONFIG_PACKAGES))
+LDFLAGS=-stdlib=libc++
 LDFLAGS+=$(shell pkg-config --libs $(PKG_CONFIG_PACKAGES))
 
 all: $(TEX:.tex=.pdf) parse-layout
