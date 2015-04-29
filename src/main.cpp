@@ -39,10 +39,11 @@ int main(int argc, char** argv) {
     imshow("segments", displaySegments(input, segments));
     imshow("strokes",  displayStrokes(input, strokes));
     imshow("text",     displayText(input, ocr));
+    imshow("votes",    displayVotes(input, votes));
 
     cout << layout << endl;
 
-    waitKey(0);
+    while (waitKey(0) != 'q') { }
     return 0;
 
 }

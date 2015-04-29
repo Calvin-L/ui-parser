@@ -27,9 +27,13 @@ vector<TextBox> findText(const Mat& img) {
         BOX* box = boxaGetBox(boxes, i, L_CLONE);
         ocr.SetRectangle(box->x, box->y, box->w, box->h);
         const char* ocrResult = ocr.GetUTF8Text();
-        result.push_back(TextBox {
-            Rect(Point(box->x, box->y), Size(box->w, box->h)),
-            shared_ptr<const char>(ocrResult) });
+        if (*ocrResult != 0) {
+            result.push_back(TextBox {
+                Rect(Point(box->x, box->y), Size(box->w, box->h)),
+                shared_ptr<const char>(ocrResult) });
+        } else {
+            delete[] ocrResult;
+        }
     }
     boxaDestroy(&boxes);
 

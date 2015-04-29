@@ -2,6 +2,7 @@
 #define VOTING_H 1
 
 #include <vector>
+#include <opencv2/core/core.hpp>
 
 #include "strokes.hpp"
 #include "ocr.hpp"
@@ -15,12 +16,15 @@ struct Vote {
     TextBox label;
 };
 
-struct VotedStroke : public Stroke {
+struct VotedStroke {
+    Stroke stroke;
     std::vector<Vote> votes;
 };
 
 std::vector<VotedStroke> placeVotes(
     const std::vector<Stroke>& strokes,
     const std::vector<TextBox>& ocr);
+
+cv::Mat displayVotes(const cv::Mat& bg, const std::vector<VotedStroke>& votes);
 
 #endif

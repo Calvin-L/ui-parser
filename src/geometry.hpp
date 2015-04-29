@@ -85,7 +85,7 @@ double closestApproach(cv::Vec<T,4> v1, cv::Vec<T,4> v2) {
     tc = (std::abs(tN) < SMALL_NUM ? 0.0 : tN / tD);
 
     // get the difference of the two closest points
-    Vec<T,2>   dP = w + (sc * u) - (tc * v);  // =  S1(sc) - S2(tc)
+    cv::Vec2d dP = w + (sc * u) - (tc * v);  // =  S1(sc) - S2(tc)
 
     return norm(dP);   // return the closest distance
 }
@@ -96,6 +96,65 @@ double angleOf(const cv::Vec<T,4>& v) {
     return atan2(v[3] - v[1], v[2] - v[0]);
 }
 
+/** in range [-TAU/2, TAU/2] */
 float anglediff(float a1, float a2);
+
+template <class T>
+double segmentLength(const cv::Vec<T,4>& lineSegment) {
+    double dx = lineSegment[0] - lineSegment[2];
+    double dy = lineSegment[1] - lineSegment[3];
+    return sqrt(dx*dx + dy*dy);
+}
+
+template <class T>
+cv::Vec<T,4> clipLineTop(cv::Vec<T,4> line, T top) {
+    if (line[1] < top && line[3] < top) { return cv::Vec<T,4>(0,0,0,0); }
+    if (line[1] >= top && line[3] >= top) { return line; }
+    if (line[1] > line[3]) {
+        std::swap(line[0], line[2]);
+        std::swap(line[1], line[3]);
+    }
+    const T dx = line[2] - line[0];
+    return cv::Vec<T,4>(line[0] + dx * ((double)(line[1] - top) / (line[3] - line[1])), top, line[2], line[3]);
+}
+
+template <class T>
+cv::Vec<T,4> clipLineBot(cv::Vec<T,4> line, T bot) {
+    if (line[1] > bot && line[3] > bot) { return cv::Vec<T,4>(0,0,0,0); }
+    if (line[1] <= bot && line[3] <= bot) { return line; }
+    if (line[1] > line[3]) {
+        std::swap(line[0], line[2]);
+        std::swap(line[1], line[3]);
+    }
+    const T dx = line[2] - line[0];
+    return cv::Vec<T,4>(line[0], line[1], line[0] + dx * ((double)(bot - line[1]) / (line[3] - line[1])), bot);
+}
+
+template <class T>
+cv::Vec<T,4> clipLineLeft(cv::Vec<T,4> line, T left) {
+    if (line[0] < left && line[2] < left) { return cv::Vec<T,4>(0,0,0,0); }
+    if (line[0] >= left && line[2] >= left) { return line; }
+    if (line[0] > line[2]) {
+        std::swap(line[0], line[2]);
+        std::swap(line[1], line[3]);
+    }
+    const T dy = line[3] - line[1];
+    return cv::Vec<T,4>(left, line[1] + dy * ((double)(line[2] - left) / (line[2] - line[0])), line[2], line[3]);
+}
+
+template <class T>
+cv::Vec<T,4> clipLineRight(cv::Vec<T,4> line, T right) {
+    if (line[0] > right && line[2] > right) { return cv::Vec<T,4>(0,0,0,0); }
+    if (line[0] <= right && line[2] <= right) { return line; }
+    if (line[0] > line[2]) {
+        std::swap(line[0], line[2]);
+        std::swap(line[1], line[3]);
+    }
+    const T dy = line[3] - line[1];
+    return cv::Vec<T,4>(line[0], line[1], right, line[1] + dy * ((double)(right - line[0]) / (line[2] - line[0])));
+}
+
+/** compute the subsegment that lies in the given rectangle */
+cv::Vec4i segmentOverlapWithRect(cv::Vec4i segment, const cv::Rect& rect);
 
 #endif
