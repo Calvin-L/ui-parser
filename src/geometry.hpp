@@ -107,6 +107,21 @@ double segmentLength(const cv::Vec<T,4>& lineSegment) {
 }
 
 template <class T>
+double distance(const cv::Vec<T,2> p1, const cv::Vec<T,2> p2) {
+    return norm(p1 - p2);
+}
+
+template <class T>
+cv::Vec<T,2> p1(const cv::Vec<T,4> line) {
+    return cv::Vec<T,2>(line[0], line[1]);
+}
+
+template <class T>
+cv::Vec<T,2> p2(const cv::Vec<T,4> line) {
+    return cv::Vec<T,2>(line[2], line[3]);
+}
+
+template <class T>
 cv::Vec<T,4> clipLineTop(cv::Vec<T,4> line, T top) {
     if (line[1] < top && line[3] < top) { return cv::Vec<T,4>(0,0,0,0); }
     if (line[1] >= top && line[3] >= top) { return line; }
