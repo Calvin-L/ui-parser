@@ -40,6 +40,7 @@ int main(int argc, char** argv) {
     imshow("strokes",  displayStrokes(input, strokes));
     imshow("text",     displayText(input, ocr));
     imshow("votes",    displayVotes(input, votes));
+    imshow("objects",  displayObjects(input, objects));
 
     cout << layout << endl;
 

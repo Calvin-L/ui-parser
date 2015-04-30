@@ -2,6 +2,7 @@
 #define EXPLANATION_H 1
 
 #include <vector>
+#include <opencv2/core/core.hpp>
 
 #include "voting.hpp"
 
@@ -14,5 +15,6 @@ struct LayoutObject {
 };
 
 std::vector<LayoutObject> explain(const std::vector<VotedStroke>& strokes);
+cv::Mat displayObjects(const cv::Mat& bg, const std::vector<LayoutObject>& objects);
 
 #endif

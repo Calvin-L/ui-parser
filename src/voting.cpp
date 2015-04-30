@@ -140,17 +140,31 @@ static VoteType toType(const Vote& v) {
     return v.type;
 }
 
+const Vote* bestVote(const VotedStroke& stroke) {
+    if (stroke.votes.size() == 0) {
+        return nullptr;
+    }
+
+    vector<VoteType> types(stroke.votes.size());
+    std::transform(stroke.votes.begin(), stroke.votes.end(), types.begin(), toType);
+    VoteType bestType = mode(types.begin(), types.end());
+
+    for (auto& v : stroke.votes) {
+        if (v.type == bestType) {
+            return &v;
+        }
+    }
+    return nullptr;
+}
+
 Mat displayVotes(const Mat& bg, const vector<VotedStroke>& votes) {
     Mat display;
     cvtColor(bg, display, CV_GRAY2BGR);
     for (auto& stroke : votes) {
-        if (stroke.votes.size() > 0) {
-            vector<VoteType> types(stroke.votes.size());
-            std::transform(stroke.votes.begin(), stroke.votes.end(), types.begin(), toType);
-            VoteType bestType = mode(types.begin(), types.end());
-
+        const Vote* v = bestVote(stroke);
+        if (v != nullptr) {
             Scalar color(100, 100, 100);
-            switch (bestType) {
+            switch (v->type) {
                 case BOX_TOP:          color = Scalar(255, 0,   0);   break;
                 case BOX_LEFT:         color = Scalar(0,   255, 0);   break;
                 case BOX_RIGHT:        color = Scalar(0,   0,   255); break;

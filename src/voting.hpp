@@ -25,6 +25,8 @@ std::vector<VotedStroke> placeVotes(
     const std::vector<Stroke>& strokes,
     const std::vector<TextBox>& ocr);
 
+const Vote* bestVote(const VotedStroke& stroke);
+
 cv::Mat displayVotes(const cv::Mat& bg, const std::vector<VotedStroke>& votes);
 
 #endif
