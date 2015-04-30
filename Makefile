@@ -27,6 +27,9 @@ parse-layout: $(SOURCES:.cpp=.o)
 %.aux %.log %.pdf: %.tex
 	cd $$(dirname $<) && $(PDFLATEX) $$(basename $<) && $(PDFLATEX) $$(basename $<)
 
+docs/progress-2015-04-15.pdf: docs/progress-2015-04-15.tex docs/progress-2015-04-15-screenshot.png
+docs/progress-2015-04-29.pdf: docs/progress-2015-04-29.tex docs/progress-2015-04-29-screenshot.png
+
 clean:
 	$(RM) docs/*.aux docs/*.pdf docs/*.log
 	$(RM) parse-layout src/*.d src/*.o
