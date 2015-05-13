@@ -21,6 +21,8 @@ struct VotedStroke {
     std::vector<Vote> votes;
 };
 
+bool operator==(const VotedStroke& v1, const VotedStroke& v2);
+
 std::vector<VotedStroke> placeVotes(
     const std::vector<Stroke>& strokes,
     const std::vector<TextBox>& ocr);

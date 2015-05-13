@@ -1,5 +1,6 @@
 #include <iostream>
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 #include "segments.hpp"
 #include "strokes.hpp"
@@ -10,6 +11,12 @@
 
 using namespace std;
 using namespace cv;
+
+static void show(const char* title, const Mat& m) {
+    Mat scaled;
+    resize(m, scaled, Size(m.size().width/2, m.size().height/2));
+    imshow(title, scaled);
+}
 
 int main(int argc, char** argv) {
 
@@ -35,12 +42,12 @@ int main(int argc, char** argv) {
     auto constraints = formConstraints(objects);
     auto layout      = toLayout(objects, constraints);
 
-    imshow("input",    input);
-    imshow("segments", displaySegments(input, segments));
-    imshow("strokes",  displayStrokes(input, strokes));
-    imshow("text",     displayText(input, ocr));
-    imshow("votes",    displayVotes(input, votes));
-    imshow("objects",  displayObjects(input, objects));
+    show("input",    input);
+    show("segments", displaySegments(input, segments));
+    show("strokes",  displayStrokes(input, strokes));
+    show("text",     displayText(input, ocr));
+    show("votes",    displayVotes(input, votes));
+    show("objects",  displayObjects(input, objects));
 
     cout << layout << endl;
 

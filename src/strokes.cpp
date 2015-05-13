@@ -6,6 +6,14 @@
 using namespace cv;
 using namespace std;
 
+bool operator==(const Stroke& s1, const Stroke& s2) {
+    return s1.line[0] == s2.line[0] &&
+        s1.line[1] == s2.line[1] &&
+        s1.line[2] == s2.line[2] &&
+        s1.line[3] == s2.line[3] &&
+        s1.angle == s2.angle;
+}
+
 static double dominantAngle(const vector<Vec4i>& lines, int nbuckets = 8) {
     int topBucket = 0;
     vector<int> buckets(nbuckets, 0);

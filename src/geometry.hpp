@@ -122,6 +122,13 @@ cv::Vec<T,2> p2(const cv::Vec<T,4> line) {
 }
 
 template <class T>
+cv::Vec<T,2> midpoint(const cv::Vec<T,4> line) {
+    return cv::Vec<T,2>(
+        (line[2] + line[0]) / 2,
+        (line[3] + line[1]) / 2);
+}
+
+template <class T>
 cv::Vec<T,4> clipLineTop(cv::Vec<T,4> line, T top) {
     if (line[1] < top && line[3] < top) { return cv::Vec<T,4>(0,0,0,0); }
     if (line[1] >= top && line[3] >= top) { return line; }

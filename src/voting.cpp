@@ -9,6 +9,10 @@ const static TextBox NO_TEXT { };
 using namespace std;
 using namespace cv;
 
+bool operator==(const VotedStroke& v1, const VotedStroke& v2) {
+    return v1.stroke == v2.stroke && v1.votes.size() == v2.votes.size();
+}
+
 static const TextBox* findEnclosingTextBox(const Stroke& stroke, const vector<TextBox>& ocr) {
     double len = segmentLength(stroke.line);
     for (auto& box : ocr) {
@@ -66,28 +70,38 @@ static void orientLR(VotedStroke& stroke) {
 
 static VotedStroke* findLeftStroke(VotedStroke& stroke, vector<VotedStroke>& strokes) {
     orientLR(stroke);
+    int bestScore = -1;
     double len = segmentLength(stroke.stroke.line);
+    VotedStroke* best = nullptr;
     for (auto& s : strokes) {
+        int score = min(distance(p1(stroke.stroke.line), p1(s.stroke.line)),
+                        distance(p1(stroke.stroke.line), p2(s.stroke.line)));
         if (mostlyVertical(s.stroke.line) &&
-                min(distance(p1(stroke.stroke.line), p1(s.stroke.line)),
-                    distance(p1(stroke.stroke.line), p2(s.stroke.line))) < CORNER_THRESH * len) {
-            return &s;
+                score < CORNER_THRESH * len &&
+                (bestScore < 0 || score < bestScore)) {
+            bestScore = score;
+            best = &s;
         }
     }
-    return nullptr;
+    return best;
 }
 
 static VotedStroke* findRightStroke(VotedStroke& stroke, vector<VotedStroke>& strokes) {
     orientLR(stroke);
+    int bestScore = -1;
     double len = segmentLength(stroke.stroke.line);
+    VotedStroke* best = nullptr;
     for (auto& s : strokes) {
+        int score = min(distance(p2(stroke.stroke.line), p1(s.stroke.line)),
+                        distance(p2(stroke.stroke.line), p2(s.stroke.line)));
         if (mostlyVertical(s.stroke.line) &&
-                min(distance(p2(stroke.stroke.line), p1(s.stroke.line)),
-                    distance(p2(stroke.stroke.line), p2(s.stroke.line))) < CORNER_THRESH * len) {
-            return &s;
+                score < CORNER_THRESH * len &&
+                (bestScore < 0 || score < bestScore)) {
+            bestScore = score;
+            best = &s;
         }
     }
-    return nullptr;
+    return best;
 }
 
 vector<VotedStroke> placeVotes(

@@ -10,11 +10,34 @@ enum LayoutObjectType {
     LAYOUT_BOX, MEASUREMENT
 };
 
-struct LayoutObject {
-    LayoutObjectType type;
+enum MeasurementRel {
+    TOP_BORDER,
+    LEFT_BORDER,
+    RIGHT_BORDER,
+    BOTTOM_BORDER
 };
 
-std::vector<LayoutObject> explain(const std::vector<VotedStroke>& strokes);
+struct LayoutObject {
+    LayoutObjectType type;
+
+    union {
+
+        int boxData[4]; // x, y, w, h
+
+        // some part of box1 is some distance from box2
+        struct {
+            LayoutObject* box1;
+            MeasurementRel rel1;
+
+            LayoutObject* box2;
+            MeasurementRel rel2;
+        } measurementData;
+
+    } data;
+
+};
+
+std::vector<LayoutObject> explain(std::vector<VotedStroke> strokes);
 cv::Mat displayObjects(const cv::Mat& bg, const std::vector<LayoutObject>& objects);
 
 #endif

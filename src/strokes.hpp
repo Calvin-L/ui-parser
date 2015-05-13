@@ -9,6 +9,7 @@ struct Stroke {
     double angle;
 };
 
+bool operator==(const Stroke& s1, const Stroke& s2);
 std::vector<Stroke> findStrokes(const std::vector<cv::Vec4i>& segments);
 cv::Mat displayStrokes(const cv::Mat& bg, const std::vector<Stroke>& strokes);
 
