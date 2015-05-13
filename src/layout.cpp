@@ -3,7 +3,7 @@
 using namespace std;
 
 Layout toLayout(
-    const vector<LayoutObject>& objects,
+    const vector<LayoutObject*>& objects,
     const vector<Constraint>& constraints) {
     return Layout();
 }

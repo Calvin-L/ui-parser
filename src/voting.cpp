@@ -23,14 +23,6 @@ static const TextBox* findEnclosingTextBox(const Stroke& stroke, const vector<Te
     return nullptr;
 }
 
-static bool mostlyHorizontal(const Vec4i& v) {
-    return abs(cos(angleOf(v))) > abs(cos(45));
-}
-
-static bool mostlyVertical(const Vec4i& v) {
-    return !mostlyHorizontal(v);
-}
-
 static bool couldBeMeasurementText(const Vec4i& line, const TextBox& text) {
     // no overlap
     if (segmentLength(segmentOverlapWithRect(line, text.boundary)) > 1) {
@@ -61,11 +53,7 @@ static vector<const TextBox*> findMeasurementTextBoxes(const Stroke& stroke, con
 static const double CORNER_THRESH = 0.2;
 
 static void orientLR(VotedStroke& stroke) {
-    Vec4i& l = stroke.stroke.line;
-    if (l[0] > l[2]) {
-        std::swap(l[0], l[2]);
-        std::swap(l[1], l[3]);
-    }
+    stroke.stroke.line = orientLR(stroke.stroke.line);
 }
 
 static VotedStroke* findLeftStroke(VotedStroke& stroke, vector<VotedStroke>& strokes) {

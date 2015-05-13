@@ -90,6 +90,11 @@ double closestApproach(cv::Vec<T,4> v1, cv::Vec<T,4> v2) {
     return norm(dP);   // return the closest distance
 }
 
+template<class T>
+double closestApproach(cv::Vec<T,2> v1, cv::Vec<T,4> v2) {
+    return closestApproach(cv::Vec<T,4>(v1[0], v1[1], v1[0], v1[1]), v2);
+}
+
 /** in range [-TAU/2, TAU/2] */
 template <class T>
 double angleOf(const cv::Vec<T,4>& v) {
@@ -178,5 +183,33 @@ cv::Vec<T,4> clipLineRight(cv::Vec<T,4> line, T right) {
 
 /** compute the subsegment that lies in the given rectangle */
 cv::Vec4i segmentOverlapWithRect(cv::Vec4i segment, const cv::Rect& rect);
+
+template <class T>
+bool mostlyHorizontal(const cv::Vec<T,4>& v) {
+    return std::abs(cos(angleOf(v))) > std::abs(cos(45));
+}
+
+template <class T>
+bool mostlyVertical(const cv::Vec<T,4>& v) {
+    return !mostlyHorizontal(v);
+}
+
+template <class T>
+cv::Vec<T,4> orientLR(cv::Vec<T,4> l) {
+    if (l[0] > l[2]) {
+        std::swap(l[0], l[2]);
+        std::swap(l[1], l[3]);
+    }
+    return l;
+}
+
+template <class T>
+cv::Vec<T,4> orientTB(cv::Vec<T,4> l) {
+    if (l[1] > l[3]) {
+        std::swap(l[0], l[2]);
+        std::swap(l[1], l[3]);
+    }
+    return l;
+}
 
 #endif

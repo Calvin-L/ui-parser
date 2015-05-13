@@ -9,6 +9,6 @@ struct Constraint {
 
 };
 
-std::vector<Constraint> formConstraints(const std::vector<LayoutObject>& objects);
+std::vector<Constraint> formConstraints(const std::vector<LayoutObject*>& objects);
 
 #endif

@@ -26,10 +26,10 @@ struct LayoutObject {
 
         // some part of box1 is some distance from box2
         struct {
-            LayoutObject* box1;
+            const LayoutObject* box1;
             MeasurementRel rel1;
 
-            LayoutObject* box2;
+            const LayoutObject* box2;
             MeasurementRel rel2;
         } measurementData;
 
@@ -37,7 +37,7 @@ struct LayoutObject {
 
 };
 
-std::vector<LayoutObject> explain(std::vector<VotedStroke> strokes);
-cv::Mat displayObjects(const cv::Mat& bg, const std::vector<LayoutObject>& objects);
+std::vector<LayoutObject*> explain(std::vector<VotedStroke> strokes);
+cv::Mat displayObjects(const cv::Mat& bg, const std::vector<LayoutObject*>& objects);
 
 #endif

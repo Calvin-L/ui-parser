@@ -12,7 +12,7 @@ struct Layout {
 };
 
 Layout toLayout(
-    const std::vector<LayoutObject>& objects,
+    const std::vector<LayoutObject*>& objects,
     const std::vector<Constraint>& constraints);
 
 std::ostream& operator<<(std::ostream& stream, const Layout& layout);
