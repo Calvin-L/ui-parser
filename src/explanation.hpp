@@ -1,6 +1,7 @@
 #ifndef EXPLANATION_H
 #define EXPLANATION_H 1
 
+#include <memory>
 #include <vector>
 #include <opencv2/core/core.hpp>
 
@@ -31,6 +32,8 @@ struct LayoutObject {
 
             const LayoutObject* box2;
             MeasurementRel rel2;
+
+            const char* text;
         } measurementData;
 
     } data;

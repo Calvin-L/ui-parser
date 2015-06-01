@@ -2,13 +2,15 @@
 #define LAYOUT_H 1
 
 #include <vector>
-#include <iostream>
+#include <ostream>
 
 #include "explanation.hpp"
 #include "constraints.hpp"
 
-struct Layout {
+struct Element;
 
+struct Layout {
+    Element* root;
 };
 
 Layout toLayout(

@@ -30,7 +30,7 @@ vector<TextBox> findText(const Mat& img) {
         if (*ocrResult != 0) {
             result.push_back(TextBox {
                 Rect(Point(box->x, box->y), Size(box->w, box->h)),
-                shared_ptr<const char>(ocrResult) });
+                ocrResult });
         } else {
             delete[] ocrResult;
         }
@@ -46,8 +46,8 @@ Mat displayText(const Mat& bg, const vector<TextBox>& textBoxes) {
     for (auto& text : textBoxes) {
         Scalar color = Scalar(rand() % 255, rand() % 100 + 155, rand() % 255);
         rectangle(display, text.boundary.tl(), text.boundary.br(), color);
-        putText(display, text.text.get(), text.boundary.br() + Point(1,1), FONT_HERSHEY_SIMPLEX, 0.5, Scalar::all(0), 1);
-        putText(display, text.text.get(), text.boundary.br(), FONT_HERSHEY_SIMPLEX, 0.5, color, 1);
+        putText(display, text.text, text.boundary.br() + Point(1,1), FONT_HERSHEY_SIMPLEX, 0.5, Scalar::all(0), 1);
+        putText(display, text.text, text.boundary.br(), FONT_HERSHEY_SIMPLEX, 0.5, color, 1);
     }
     return display;
 }

@@ -7,7 +7,7 @@
 
 struct TextBox {
     cv::Rect boundary;
-    std::shared_ptr<const char> text;
+    const char* text;
 };
 
 std::vector<TextBox> findText(const cv::Mat& img);

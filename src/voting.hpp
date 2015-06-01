@@ -13,7 +13,7 @@ enum VoteType {
 
 struct Vote {
     VoteType type;
-    TextBox label;
+    TextBox label; // when type == MEASUREMENT_LINE or TEXT
 };
 
 struct VotedStroke {

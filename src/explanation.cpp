@@ -193,12 +193,12 @@ bool findLeftTarget(const VotedStroke& s, const vector<LayoutObject*>& objs, Lay
     const LayoutObject* best = nullptr;
     MeasurementRel rel;
     double bestScore;
-    // for (auto& o : objs) {
-    //     if (o.type == LAYOUT_BOX) {
-    //         considerTarget(&o, pt, getLine(&o, LEFT_BORDER),  LEFT_BORDER,  best, rel, bestScore);
-    //         considerTarget(&o, pt, getLine(&o, RIGHT_BORDER), RIGHT_BORDER, best, rel, bestScore);
-    //     }
-    // }
+    for (auto o : objs) {
+        if (o->type == LAYOUT_BOX) {
+            considerTarget(o, pt, getLine(o, LEFT_BORDER),  LEFT_BORDER,  best, rel, bestScore);
+            considerTarget(o, pt, getLine(o, RIGHT_BORDER), RIGHT_BORDER, best, rel, bestScore);
+        }
+    }
 
     line.data.measurementData.box1 = best;
     line.data.measurementData.rel1 = rel;
@@ -213,12 +213,12 @@ bool findRightTarget(const VotedStroke& s, const vector<LayoutObject*>& objs, La
     const LayoutObject* best = nullptr;
     MeasurementRel rel;
     double bestScore;
-    // for (auto& o : objs) {
-    //     if (o.type == LAYOUT_BOX) {
-    //         considerTarget(&o, pt, getLine(&o, LEFT_BORDER),  LEFT_BORDER,  best, rel, bestScore);
-    //         considerTarget(&o, pt, getLine(&o, RIGHT_BORDER), RIGHT_BORDER, best, rel, bestScore);
-    //     }
-    // }
+    for (auto o : objs) {
+        if (o->type == LAYOUT_BOX) {
+            considerTarget(o, pt, getLine(o, LEFT_BORDER),  LEFT_BORDER,  best, rel, bestScore);
+            considerTarget(o, pt, getLine(o, RIGHT_BORDER), RIGHT_BORDER, best, rel, bestScore);
+        }
+    }
 
     line.data.measurementData.box2 = best;
     line.data.measurementData.rel2 = rel;
@@ -233,6 +233,17 @@ bool layoutLine(const VotedStroke& s, const vector<LayoutObject*>& objs, LayoutO
         return findLeftTarget(s, objs, line) && findRightTarget(s, objs, line);
     }
     return false;
+}
+
+const char* getLabel(const VotedStroke& s) {
+    for (auto& v : s.votes) {
+        if (v.type == TEXT) {
+            return v.label.text;
+        } else if (v.type == MEASUREMENT_LINE) {
+            return v.label.text;
+        }
+    }
+    return "";
 }
 
 vector<LayoutObject*> explain(vector<VotedStroke> strokes) {
@@ -253,6 +264,7 @@ vector<LayoutObject*> explain(vector<VotedStroke> strokes) {
         const VotedStroke& s = *it;
 
         if (hasVote(s, MEASUREMENT_LINE) && layoutLine(s, result, o)) {
+            o.data.measurementData.text = getLabel(s);
             result.push_back(new LayoutObject(o));
             it = strokes.erase(it);
             ++nlines;
@@ -286,8 +298,8 @@ Mat displayObjects(const Mat& bg, const vector<LayoutObject*>& objects) {
             case MEASUREMENT:
                 Point p1 = midpoint(getLine(obj.data.measurementData.box1, obj.data.measurementData.rel1));
                 Point p2 = midpoint(getLine(obj.data.measurementData.box2, obj.data.measurementData.rel2));
-                cerr << "XXX top: " << " --> " << obj.data.measurementData.box1->data.boxData[0] << ", " << obj.data.measurementData.box1->data.boxData[1] << ", " << obj.data.measurementData.box1->data.boxData[2] << ", " << obj.data.measurementData.box1->data.boxData[3] << "(" << printRel(obj.data.measurementData.rel1) << ")" << endl;
-                cerr << "XXX bot: " << " --> " << obj.data.measurementData.box2->data.boxData[0] << ", " << obj.data.measurementData.box2->data.boxData[1] << ", " << obj.data.measurementData.box2->data.boxData[2] << ", " << obj.data.measurementData.box2->data.boxData[3] << "(" << printRel(obj.data.measurementData.rel2) << ")" << endl;
+                cerr << "start: " << " --> " << obj.data.measurementData.box1->data.boxData[0] << ", " << obj.data.measurementData.box1->data.boxData[1] << ", " << obj.data.measurementData.box1->data.boxData[2] << ", " << obj.data.measurementData.box1->data.boxData[3] << " (" << printRel(obj.data.measurementData.rel1) << ")" << endl;
+                cerr << "  end: " << " --> " << obj.data.measurementData.box2->data.boxData[0] << ", " << obj.data.measurementData.box2->data.boxData[1] << ", " << obj.data.measurementData.box2->data.boxData[2] << ", " << obj.data.measurementData.box2->data.boxData[3] << " (" << printRel(obj.data.measurementData.rel2) << ")" << endl;
                 line(display, p1, p2, Scalar(0, 255, 0));
                 break;
 

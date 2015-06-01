@@ -5,6 +5,16 @@
 
 #include "explanation.hpp"
 
+enum Unit {
+    UNIT_PX,
+    UNIT_PERCENT
+};
+
+struct Length {
+    Unit unit;
+    double value;
+};
+
 struct Constraint {
 
 };
