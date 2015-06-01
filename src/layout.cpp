@@ -4,20 +4,25 @@
 using namespace std;
 
 enum ElementType {
+    ELEMENT_ROOT,
     ELEMENT_TEXT,
     ELEMENT_BOX,
-    ELEMENT_IMAGE
+    ELEMENT_IMAGE,
 };
 
 enum TextFormat {
     TEXT_TITLE,
-    TEXT_PARAGRAPH
+    TEXT_PARAGRAPH,
 };
 
 struct Element {
     ElementType type;
     Element* nextSibling;
     union {
+        struct {
+            Element* children;
+        } rootData;
+
         struct {
             const char* text;
             TextFormat format;
@@ -40,7 +45,13 @@ struct Element {
 Layout toLayout(
     const vector<LayoutObject*>& objects,
     const vector<Constraint>& constraints) {
-    return Layout { nullptr };
+
+    auto root = new Element;
+    root->type = ELEMENT_ROOT;
+    root->nextSibling = nullptr;
+    root->data.rootData.children = nullptr;
+
+    return Layout { root };
 }
 
 static inline const char* unitToStr(Unit u) {
@@ -78,6 +89,20 @@ static void printRandomColor(ostream& stream) {
 }
 
 static void printElement(ostream& stream, const Element* e);
+
+static void printRoot(ostream& stream, const Element* root) {
+    stream << "<!DOCTYPE html>\n";
+    stream << "<html>";
+    stream << "<head><title>generated page</title></head>";
+    stream << "<body>";
+    const Element* child = root->data.rootData.children;
+    while (child != nullptr) {
+        printElement(stream, child);
+        child = child->nextSibling;
+    }
+    stream << "</body>";
+    stream << "</html>";
+}
 
 static void printBox(ostream& stream, const Element* box) {
     auto& data = box->data.boxData;
@@ -120,6 +145,7 @@ static void printElement(ostream& stream, const Element* e) {
     }
 
     switch (e->type) {
+        case ELEMENT_ROOT:  printRoot (stream, e); break;
         case ELEMENT_TEXT:  printText (stream, e); break;
         case ELEMENT_BOX:   printBox  (stream, e); break;
         case ELEMENT_IMAGE: printImage(stream, e); break;

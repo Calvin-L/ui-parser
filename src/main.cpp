@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cstring>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
@@ -18,14 +19,27 @@ static void show(const char* title, const Mat& m) {
     imshow(title, scaled);
 }
 
+static int usage(char** argv) {
+    cerr << "Usage: " << argv[0] << " [--no-debug] <file>" << endl;
+    return 1;
+}
+
 int main(int argc, char** argv) {
 
-    if (argc != 2) {
-        cerr << "Usage: " << argv[0] << " <file>" << endl;
-        return 1;
+    if (argc < 2 || argc > 3) {
+        return usage(argv);
     }
 
-    const char* file = argv[1];
+    bool interactive = true;
+    if (argc == 3) {
+        if (strcmp(argv[1], "--no-debug") == 0) {
+            interactive = false;
+        } else {
+            return usage(argv);
+        }
+    }
+
+    const char* file = argv[argc-1];
 
     Mat input = imread(file, CV_LOAD_IMAGE_GRAYSCALE);
 
@@ -42,16 +56,17 @@ int main(int argc, char** argv) {
     auto constraints = formConstraints(objects);
     auto layout      = toLayout(objects, constraints);
 
-    show("input",    input);
-    show("segments", displaySegments(input, segments));
-    show("strokes",  displayStrokes(input, strokes));
-    show("text",     displayText(input, ocr));
-    show("votes",    displayVotes(input, votes));
-    show("objects",  displayObjects(input, objects));
-
     cout << layout << endl;
 
-    while (waitKey(0) != 'q') { }
-    return 0;
+    if (interactive) {
+        show("input",    input);
+        show("segments", displaySegments(input, segments));
+        show("strokes",  displayStrokes(input, strokes));
+        show("text",     displayText(input, ocr));
+        show("votes",    displayVotes(input, votes));
+        show("objects",  displayObjects(input, objects));
+        while (waitKey(0) != 'q') { }
+    }
 
+    return 0;
 }

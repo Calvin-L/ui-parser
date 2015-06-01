@@ -212,4 +212,7 @@ cv::Vec<T,4> orientTB(cv::Vec<T,4> l) {
     return l;
 }
 
+// r2 contained in r1?
+bool contains(const cv::Rect& r1, const cv::Rect& r2);
+
 #endif

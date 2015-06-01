@@ -34,9 +34,9 @@ vector<TextBox> findText(const Mat& img) {
         exit(1);
     }
 
-    Mat scldown;
-    resize(pp, scldown, Size(0, 0), .25, .25, INTER_CUBIC);
-    imshow("text preprocessing", scldown);
+    // Mat scldown;
+    // resize(pp, scldown, Size(0, 0), .25, .25, INTER_CUBIC);
+    // imshow("text preprocessing", scldown);
 
     vector<TextBox> result;
 
@@ -44,6 +44,10 @@ vector<TextBox> findText(const Mat& img) {
     // ocr.SetVariable("tessedit_char_whitelist", "0123456789px% .-");
     ocr.SetImage(pp.data, pp.size().width, pp.size().height, pp.step[1], pp.step[0]);
     Boxa* boxes = ocr.GetComponentImages(tesseract::RIL_WORD, true, NULL, NULL);
+    if (boxes == nullptr) {
+        return result;
+    }
+
     for (int i = 0; i < boxes->n; i++) {
         BOX* box = boxaGetBox(boxes, i, L_CLONE);
         ocr.SetRectangle(box->x, box->y, box->w, box->h);
