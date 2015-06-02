@@ -26,6 +26,6 @@ Vec4i segmentOverlapWithRect(Vec4i segment, const Rect& rect) {
 bool contains(const cv::Rect& r1, const cv::Rect& r2) {
     return r1.x <= r2.x &&
         r1.y <= r2.y &&
-        r1.width >= r2.width &&
-        r1.height >= r2.height;
+        r1.width + r1.x >= r2.width + r2.x &&
+        r1.height + r1.y >= r2.height + r2.y;
 }

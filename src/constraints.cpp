@@ -31,5 +31,10 @@ vector<Constraint> formConstraints(const vector<LayoutObject*>& objects) {
 
     findContainmentConstraints(objects, result);
 
+    for (auto o : objects) {
+        result.push_back(Constraint { CONSTRAINT_WIDTH, o, nullptr, Length { UNIT_PX, static_cast<double>(o->data.boxData[2]) }});
+        result.push_back(Constraint { CONSTRAINT_HEIGHT, o, nullptr, Length { UNIT_PX, static_cast<double>(o->data.boxData[3]) }});
+    }
+
     return result;
 }

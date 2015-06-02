@@ -1,7 +1,15 @@
 #include "layout.hpp"
+
 #include <cstdlib>
+#include <iostream>
+#include <algorithm>
+// #include <z3++.h>
+
+#include "UnionFind.hpp"
+#include "printing.hpp"
 
 using namespace std;
+// using namespace z3;
 
 enum ElementType {
     ELEMENT_ROOT,
@@ -42,14 +50,219 @@ struct Element {
     } data;
 };
 
+template <class T>
+static int indexOf(const vector<T>& vec, const T& val) {
+    auto it = find(vec.begin(), vec.end(), val);
+    return (it == vec.end()) ? -1 : (it - vec.begin());
+}
+
+// o1 contains o2?
+static bool forcedContainment(const LayoutObject* o1, const LayoutObject* o2,
+    const vector<Constraint>& constraints) {
+
+    for (auto& c : constraints) {
+        if (c.type == CONSTRAINT_CONTAINS && o1 == c.obj1 && o2 == c.obj2) {
+            return true;
+        }
+    }
+    return false;
+}
+
+vector<vector<int>> findTrees(vector<int> g,
+    const vector<LayoutObject*>& objects,
+    const vector<Constraint>& constraints) {
+
+    struct Related {
+        const vector<LayoutObject*>& objects;
+        const vector<Constraint>& constraints;
+
+        bool operator()(int i1, int i2) {
+            return forcedContainment(objects[i1], objects[i2], constraints) ||
+                forcedContainment(objects[i2], objects[i1], constraints);
+        }
+    };
+
+    return group(g, Related { objects, constraints });
+}
+
+// moves root to position 0
+static void findRoot(vector<int>& g,
+    const vector<LayoutObject*>& objects,
+    const vector<Constraint>& constraints) {
+
+    int rootIdx = 0;
+    for (int i = 1; i < g.size(); ++i) {
+        auto o1 = objects[g[rootIdx]];
+        auto o2 = objects[g[i]];
+
+        if (forcedContainment(o2, o1, constraints)) {
+            cerr << "woo@" << i << endl;
+            rootIdx = i;
+        }
+    }
+
+    if (rootIdx != 0) {
+        swap(g[0], g[rootIdx]);
+    }
+}
+
+void applySizeConstraints(Element* e, LayoutObject* o, const vector<Constraint>& constraints) {
+    for (auto& c : constraints) {
+        switch (c.type) {
+            case CONSTRAINT_WIDTH:
+                if (c.obj1 == o) { e->data.boxData.width = c.len; }
+                break;
+            case CONSTRAINT_HEIGHT:
+                if (c.obj1 == o) { e->data.boxData.height = c.len; }
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+Element* buildLayout(
+    const vector<int>& g,
+    const vector<LayoutObject*>& objects,
+    const vector<Constraint>& constraints) {
+
+    if (g.size() == 0) {
+        return nullptr;
+    }
+
+    auto trees = findTrees(g, objects, constraints);
+    cerr << trees << endl;
+
+    Element* e = nullptr;
+    for (auto& t : trees) {
+        cerr << t << endl;
+        findRoot(t, objects, constraints);
+        cerr << t << endl;
+        const LayoutObject* rootObj = objects[t[0]];
+
+        cerr << "root is " << rootObj->data.boxData[0] << ", " << rootObj->data.boxData[1] << ", " << rootObj->data.boxData[2] << ", " << rootObj->data.boxData[3] << endl;
+
+        Element* root = new Element;
+        root->type = ELEMENT_BOX;
+        auto& data = root->data.boxData;
+
+        data.width = data.height = Length { UNIT_PX, 100 };
+        applySizeConstraints(root, objects[t[0]], constraints);
+
+        data.margin[0] = data.margin[1] = data.margin[2] = data.margin[3] = Length { UNIT_PX, 100 };
+        t.erase(t.begin());
+        root->data.boxData.children = buildLayout(t, objects, constraints);
+
+        root->nextSibling = e;
+        e = root;
+    }
+    return e;
+}
+
+int deleteElement(Element*& e) {
+    if (e == nullptr) {
+        return 0;
+    }
+    int n = deleteElement(e->nextSibling);
+    switch (e->type) {
+        case ELEMENT_ROOT:
+            n += deleteElement(e->data.rootData.children);
+            break;
+        case ELEMENT_BOX:
+            n += deleteElement(e->data.boxData.children);
+            break;
+        default:
+            break;
+    }
+    delete e;
+    e = nullptr;
+    return n + 1;
+}
+
 Layout toLayout(
     const vector<LayoutObject*>& objects,
     const vector<Constraint>& constraints) {
 
-    auto root = new Element;
+    // context ctx;
+    // solver s(ctx);
+
+    // auto parent_of = ctx.function("parent_of", ctx.int_sort(), ctx.int_sort());
+
+    // for (int i = 0, len = objects.size(); i < len; ++i) {
+    //     s.add(parent_of(i) >= 0 && parent_of(i) < len);
+    // }
+
+    // for (auto& c : constraints) {
+    //     int idx1, idx2;
+    //     switch (c.type) {
+    //         case CONSTRAINT_CONTAINS:
+    //             idx1 = indexOf(objects, c.obj1);
+    //             idx2 = indexOf(objects, c.obj2);
+    //             s.add(parent_of(idx2) == idx1);
+    //             break;
+    //         case CONSTRAINT_VERTSPACE:
+    //             break;
+    //         case CONSTRAINT_HORIZSPACE:
+    //             break;
+    //         case CONSTRAINT_PAD_TOP:
+    //             break;
+    //         case CONSTRAINT_PAD_RIGHT:
+    //             break;
+    //         case CONSTRAINT_PAD_BOTTOM:
+    //             break;
+    //         case CONSTRAINT_PAD_LEFT:
+    //             break;
+    //         case CONSTRAINT_WIDTH:
+    //             break;
+    //         case CONSTRAINT_HEIGHT:
+    //             break;
+    //     }
+    // }
+
+    // switch (s.check()) {
+    //     case unknown:
+    //         cerr << "constraints unsolvable [UNKNOWN]" << endl;
+    //         return Layout { nullptr };
+    //     case unsat:
+    //         cerr << "constraints unsolvable [UNSAT]" << endl;
+    //         return Layout { nullptr };
+    //     case sat:
+    //         break;
+    // }
+
+    // auto model = s.get_model();
+
+    // auto root = new Element;
+    // root->type = ELEMENT_ROOT;
+    // root->nextSibling = nullptr;
+    // root->data.rootData.children = nullptr;
+
+    // Element** mirror = new Element*[objects.size()];
+    // fill(mirror, mirror + objects.size(), nullptr);
+
+    vector<int> g;
+    for (int i = 0; i < objects.size(); ++i) {
+        if (objects[i]->type == LAYOUT_BOX) {
+            g.push_back(i);
+        }
+    }
+    auto root = buildLayout(g, objects, constraints);
+
+    if (root == nullptr) {
+        cerr << "no trees found!" << endl;
+        return Layout { nullptr };
+    } else if (root->nextSibling != nullptr) {
+        int ndeleted = deleteElement(root->nextSibling);
+        cerr << "multiple trees found (discarded " << ndeleted << ")!" << endl;
+    }
+
     root->type = ELEMENT_ROOT;
-    root->nextSibling = nullptr;
-    root->data.rootData.children = nullptr;
+    root->data.rootData.children = root->data.boxData.children;
+
+    // int rootIdx = *(roots.begin());
+    // Element* root = new Element
+
+    // delete[] mirror;
 
     return Layout { root };
 }
@@ -63,7 +276,7 @@ static inline const char* unitToStr(Unit u) {
 }
 
 static inline void printLength(ostream& stream, const Length& l) {
-    stream << l.value << ' ' << unitToStr(l.unit);
+    stream << l.value << unitToStr(l.unit);
 }
 
 static void printByte(ostream& stream, const int byte) {
