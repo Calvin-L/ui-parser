@@ -106,7 +106,7 @@ static void findRoot(vector<int>& g,
     }
 }
 
-void applySizeConstraints(Element* e, LayoutObject* o, const vector<Constraint>& constraints) {
+void applySizeConstraints(Element* e, const LayoutObject* o, const vector<Constraint>& constraints) {
     for (auto& c : constraints) {
         switch (c.type) {
             case CONSTRAINT_WIDTH:
@@ -121,10 +121,32 @@ void applySizeConstraints(Element* e, LayoutObject* o, const vector<Constraint>&
     }
 }
 
+void applyMarginConstraints(const LayoutObject* parent, Element* e, const LayoutObject* o, const vector<Constraint>& constraints) {
+    for (auto& c : constraints) {
+        switch (c.type) {
+            case CONSTRAINT_PAD_TOP:
+                if (c.obj1 == parent && c.obj2 == o) { e->data.boxData.margin[0] = c.len; }
+                break;
+            case CONSTRAINT_PAD_RIGHT:
+                if (c.obj1 == parent && c.obj2 == o) { e->data.boxData.margin[1] = c.len; }
+                break;
+            case CONSTRAINT_PAD_BOTTOM:
+                if (c.obj1 == parent && c.obj2 == o) { e->data.boxData.margin[2] = c.len; }
+                break;
+            case CONSTRAINT_PAD_LEFT:
+                if (c.obj1 == parent && c.obj2 == o) { e->data.boxData.margin[3] = c.len; }
+                break;
+            default:
+                break;
+        }
+    }
+}
+
 Element* buildLayout(
     const vector<int>& g,
     const vector<LayoutObject*>& objects,
-    const vector<Constraint>& constraints) {
+    const vector<Constraint>& constraints,
+    const LayoutObject* parent = nullptr) {
 
     if (g.size() == 0) {
         return nullptr;
@@ -138,7 +160,8 @@ Element* buildLayout(
         cerr << t << endl;
         findRoot(t, objects, constraints);
         cerr << t << endl;
-        const LayoutObject* rootObj = objects[t[0]];
+        int rootIdx = t[0];
+        const LayoutObject* rootObj = objects[rootIdx];
 
         cerr << "root is " << rootObj->data.boxData[0] << ", " << rootObj->data.boxData[1] << ", " << rootObj->data.boxData[2] << ", " << rootObj->data.boxData[3] << endl;
 
@@ -147,11 +170,14 @@ Element* buildLayout(
         auto& data = root->data.boxData;
 
         data.width = data.height = Length { UNIT_PX, 100 };
-        applySizeConstraints(root, objects[t[0]], constraints);
+        applySizeConstraints(root, rootObj, constraints);
 
-        data.margin[0] = data.margin[1] = data.margin[2] = data.margin[3] = Length { UNIT_PX, 100 };
+        data.margin[0] = data.margin[1] = data.margin[2] = data.margin[3] = Length { UNIT_PX, 0.0 };
+        if (parent != nullptr) {
+            applyMarginConstraints(parent, root, rootObj, constraints);
+        }
         t.erase(t.begin());
-        root->data.boxData.children = buildLayout(t, objects, constraints);
+        root->data.boxData.children = buildLayout(t, objects, constraints, rootObj);
 
         root->nextSibling = e;
         e = root;
@@ -306,7 +332,10 @@ static void printElement(ostream& stream, const Element* e);
 static void printRoot(ostream& stream, const Element* root) {
     stream << "<!DOCTYPE html>\n";
     stream << "<html>";
-    stream << "<head><title>generated page</title></head>";
+    stream << "<head>";
+    stream << "<title>generated page</title>";
+    stream << "<style> * { margin: 0; padding: 0; } </style>";
+    stream << "</head>";
     stream << "<body>";
     const Element* child = root->data.rootData.children;
     while (child != nullptr) {
@@ -319,7 +348,7 @@ static void printRoot(ostream& stream, const Element* root) {
 
 static void printBox(ostream& stream, const Element* box) {
     auto& data = box->data.boxData;
-    stream << "<div style=\"";
+    stream << "<div style=\"position:absolute;";
     stream << "width:";            printLength(stream, data.width);     stream << ';';
     stream << "height:";           printLength(stream, data.height);    stream << ';';
     stream << "margin-top:";       printLength(stream, data.margin[0]); stream << ';';

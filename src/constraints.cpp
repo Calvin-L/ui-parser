@@ -20,6 +20,9 @@ static void findContainmentConstraints(const vector<LayoutObject*>& objects, vec
         for (auto o2 : objects) {
             if (o1->type == LAYOUT_BOX && o2->type == LAYOUT_BOX && contains(o1, o2)) {
                 dst.push_back(Constraint { CONSTRAINT_CONTAINS, o1, o2, ZERO });
+                dst.push_back(Constraint { CONSTRAINT_WIDTH, o2, nullptr, Length { UNIT_PERCENT, o2->data.boxData[2] * 100.0 / o1->data.boxData[2] }});
+                dst.push_back(Constraint { CONSTRAINT_PAD_LEFT, o1, o2, Length { UNIT_PERCENT, (o2->data.boxData[0] - o1->data.boxData[0]) * 100.0 / o1->data.boxData[2] }});
+                dst.push_back(Constraint { CONSTRAINT_PAD_TOP, o1, o2, Length { UNIT_PX, static_cast<double>(o2->data.boxData[1] - o1->data.boxData[1]) }});
             }
         }
     }
@@ -32,7 +35,6 @@ vector<Constraint> formConstraints(const vector<LayoutObject*>& objects) {
     findContainmentConstraints(objects, result);
 
     for (auto o : objects) {
-        result.push_back(Constraint { CONSTRAINT_WIDTH, o, nullptr, Length { UNIT_PX, static_cast<double>(o->data.boxData[2]) }});
         result.push_back(Constraint { CONSTRAINT_HEIGHT, o, nullptr, Length { UNIT_PX, static_cast<double>(o->data.boxData[3]) }});
     }
 
