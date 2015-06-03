@@ -1,0 +1,4 @@
+*.o
+*.d
+/parse-layout
+.DS_Store
