@@ -10,8 +10,8 @@ You will need the following:
  - pkg-config (with package files for the aforementioned libraries)
  - a C++11 capable compiler
 
-If you are building on a non-OSX machine, you may need to adjust the CXXFLAGS
-macro in Makefile.
+If you are building on a non-OSX machine, you may need to adjust the `CXXFLAGS`
+and `LDFLAGS` macros in the Makefile.
 
 To build:
 
