@@ -9,13 +9,15 @@ PKG_CONFIG_PACKAGES=tesseract opencv lept
 PDFLATEX=pdflatex -interaction nonstopmode
 
 # misc
-.PHONY: all test clean
+.PHONY: all test doc clean
 CXXFLAGS=-Os -Wall -pedantic -fwrapv -pipe -std=c++11 -stdlib=libc++
 CXXFLAGS+=$(shell pkg-config --cflags-only-I $(PKG_CONFIG_PACKAGES))
 LDFLAGS=-stdlib=libc++
 LDFLAGS+=$(shell pkg-config --libs $(PKG_CONFIG_PACKAGES))
 
-all: $(TEX:.tex=.pdf) parse-layout
+all: parse-layout
+
+docs: $(TEX:.tex=.pdf)
 
 test: $(EXAMPLES:.png=.html)
 
@@ -35,6 +37,8 @@ parse-layout: $(SOURCES:.cpp=.o)
 
 docs/progress-2015-04-15.pdf: docs/progress-2015-04-15.tex docs/progress-2015-04-15-screenshot.png
 docs/progress-2015-04-29.pdf: docs/progress-2015-04-29.tex docs/progress-2015-04-29-screenshot.png
+docs/progress-2015-05-13.pdf: docs/progress-2015-05-13.tex docs/progress-2015-05-13-screenshot.png
+docs/progress-2015-06-01.pdf: docs/progress-2015-06-01.tex docs/progress-2015-06-01-screenshot.png
 
 clean:
 	$(RM) docs/*.aux docs/*.pdf docs/*.log
