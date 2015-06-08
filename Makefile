@@ -35,6 +35,9 @@ parse-layout: $(SOURCES:.cpp=.o)
 %.aux %.log %.pdf: %.tex
 	cd $$(dirname $<) && $(PDFLATEX) $$(basename $<) && $(PDFLATEX) $$(basename $<)
 
+docs/bibliography.bbl: docs/writeup.aux docs/bibliography.bib
+	cd docs && bibtex writeup
+
 docs/nips13submit_e.sty:
 	curl -fL 'http://media.nips.cc/Conferences/2013/Styles/nips13submit_e.sty' -o $@
 
@@ -42,7 +45,7 @@ docs/progress-2015-04-15.pdf: docs/progress-2015-04-15.tex docs/progress-2015-04
 docs/progress-2015-04-29.pdf: docs/progress-2015-04-29.tex docs/progress-2015-04-29-screenshot.png
 docs/progress-2015-05-13.pdf: docs/progress-2015-05-13.tex docs/progress-2015-05-13-screenshot.png
 docs/progress-2015-06-01.pdf: docs/progress-2015-06-01.tex docs/progress-2015-06-01-screenshot.png
-docs/writeup.pdf: docs/writeup.tex docs/nips13submit_e.sty
+docs/writeup.pdf: docs/writeup.tex docs/nips13submit_e.sty docs/bibliography.bbl
 
 clean:
 	$(RM) docs/*.aux docs/*.pdf docs/*.log
