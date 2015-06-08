@@ -2,3 +2,8 @@
 *.d
 /parse-layout
 .DS_Store
+
+*.aux
+*.log
+*.pdf
+/docs/nips13submit_e.sty
