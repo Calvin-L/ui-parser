@@ -1,0 +1,22 @@
+This is a qualitative measure of how well the tool performs on each input (as
+of June 8, 2015). Compiled by Calvin Loncaric.
+
+perfect = exactly the layout described in the sketch
+good    = all the elements of the sketch, but some measurements are wrong
+bad     = some sketch elements are missing and/or most measurements are wrong
+fail    = generated layout does not match the sketch at all
+
+scan-00.png   perfect
+scan-01.png   perfect
+scan-02.png   good
+scan-03.png   perfect
+scan-04.png   good
+scan-05.png   fail
+scan-06.png   fail
+scan-07.png   fail
+scan-08.png   bad
+scan-09.png   fail
+scan-10.png   bad
+scan-11.png   bad
+scan-12.png   fail
+scan-13.png   fail

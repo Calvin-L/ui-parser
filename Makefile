@@ -44,8 +44,8 @@ docs/progress-2015-04-29.pdf: docs/progress-2015-04-29.tex docs/progress-2015-04
 docs/progress-2015-05-13.pdf: docs/progress-2015-05-13.tex docs/progress-2015-05-13-screenshot.png
 docs/progress-2015-06-01.pdf: docs/progress-2015-06-01.tex docs/progress-2015-06-01-screenshot.png
 docs/writeup.pdf: docs/writeup.tex docs/nips13submit_e.sty docs/bibliography.bib docs/benchmark.tex
-docs/benchmark.tex: parse-layout $(EXAMPLES) eval/benchmark.sh
-	./eval/benchmark.sh './parse-layout --no-debug' $(EXAMPLES) >benchmark.out
+docs/benchmark.tex: parse-layout eval/correctness.txt $(EXAMPLES) eval/benchmark.sh
+	./eval/benchmark.sh './parse-layout --no-debug' eval/correctness.txt $(EXAMPLES) >benchmark.out
 	mv benchmark.out docs/benchmark.tex
 
 clean:

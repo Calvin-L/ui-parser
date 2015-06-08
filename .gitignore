@@ -13,3 +13,5 @@
 *.fdb_latexmk
 /docs/nips13submit_e.sty
 /docs/benchmark.tex
+
+/examples/*.html
