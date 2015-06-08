@@ -43,12 +43,12 @@ docs/progress-2015-04-15.pdf: docs/progress-2015-04-15.tex docs/progress-2015-04
 docs/progress-2015-04-29.pdf: docs/progress-2015-04-29.tex docs/progress-2015-04-29-screenshot.png
 docs/progress-2015-05-13.pdf: docs/progress-2015-05-13.tex docs/progress-2015-05-13-screenshot.png
 docs/progress-2015-06-01.pdf: docs/progress-2015-06-01.tex docs/progress-2015-06-01-screenshot.png
-docs/writeup.pdf: docs/writeup.tex docs/nips13submit_e.sty docs/bibliography.bib docs/benchmark.tex
+docs/writeup.pdf: docs/writeup.tex docs/nips13submit_e.sty docs/bibliography.bib docs/benchmark.tex $(EXAMPLES) docs/scan-01-output.png docs/scan-04-output.png docs/scan-08-output.png
 docs/benchmark.tex: parse-layout eval/correctness.txt $(EXAMPLES) eval/benchmark.sh
 	./eval/benchmark.sh './parse-layout --no-debug' eval/correctness.txt $(EXAMPLES) >benchmark.out
 	mv benchmark.out docs/benchmark.tex
 
 clean:
 	$(RM) *.out docs/*.{aux,log,pdf,out,bbl,blg,fls,fdb_latexmk}
-	$(RM) docs/benchmark.tex
+	$(RM) docs/benchmark.tex docs/nips13submit_e.sty
 	$(RM) parse-layout src/*.d src/*.o
