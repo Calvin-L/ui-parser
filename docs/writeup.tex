@@ -120,20 +120,67 @@ interface in the form of an HTML page (as in \autoref{fig:sample-outputs}).
 \subsection{Element Detection}
 \label{sec:element-detection}
 
+The first major task for the tool is to identify the major \emph{elements} of
+the sketch---that is, all the boxes, text, and measurement lines present. Text
+is identified using the Tesseract library. For the remaining elements, the
+algorithm proceeds in three minor stages: find line segments using the Hough
+transform, vote on the explanation for each line segment, and then group line
+segments into elements.
+
+To find line segments, the tool first applies the probabilistic Hough transform
+\cite{HoughTransform2000} to the image. This yields a series of partial line
+segments which can be grouped into true line segments by merging parallel nearby
+ones.
+
+Each line segment then independently votes for what it believes itself to be and what it believes its relationship is to its neighbors. This is done using a few simple heuristics:
+\begin{itemize}
+\item a line that has a perpendicular line near each endpoint and a text box
+    with a number nearby is a measurement line
+\item a horizontal line with two perpendicular lines who have endpoints close to
+    its endpoints is either a box top or a box bottom
+\item box left sides and right sides are identified with a variant of the
+    previous rule
+\end{itemize}
+
+With votes placed, a greedy algorithm then proceeds to find the best possible
+box until no more boxes can be formed. The remaining lines are explained as
+either noise or as constraint measurements, depending on whether a measurement
+text box can be found for them.
+
 \subsection{Constraint Formation}
 \label{sec:constraint-formation}
+
+The second task for the tool is to construct constraints for each element.
+Constraints come in three major forms: containment constraints (i.e. element A
+is contained within element B), size constraints (i.e. width and height) and
+distance constraints (i.e. how far is it from one edge to another).
+
+Containment constraints are generated using a simple box-intersection rule: if
+one box is completely contained with another, then the latter contains the
+former. Whether the one is a \emph{direct} child of the other or a
+\emph{transitive} child of the other is determined later (see
+\autoref{sec:layout-gen}).
+
+Width and height constraints are identified by looking for constraint
+measurements which relate two edges of the same box to each other. All remaining
+constraints are treated as distance constraints.
+
+The quality of the generated constraints is highly dependent on the quality of
+the handwriting recognition which takes place at the beginning of the pipeline.
+I found this to be a major bottleneck in the tool, and a good handwriting
+recognizer is absolutely a requirement before this tool is usable.
+Unfortunately, I did not have time to implement a good one (it might be an
+entire research project on its own).
 
 \subsection{Layout Generation}
 \label{sec:layout-gen}
 
-The layout generation engine is not a major contribution of this work, so it
-will not be discussed in any great detail.
-
-At a high level, the layout generation engine works by recursively identifying
-all the roots of the layout (i.e. elements which are not constrained to be
-contained within another element). Once the roots are found, the algorithm
-groups elements by which root they belong to and recurses. Elements belonging
-to more than one root are arbitrarily assigned to one.
+The final task for the tool is layout generation. At a high level, the layout
+generation engine works by recursively identifying all the roots of the layout
+(i.e. elements which are not constrained to be contained within another
+element). Once the roots are found, the algorithm groups elements by which root
+they belong to and recurses. Elements belonging to more than one root are
+arbitrarily assigned to one.
 
 For each root, the algorithm then finds a constraint for top, left, bottom, and
 right margins; width; and height. Additional or conflicting constraints are
@@ -213,9 +260,32 @@ complex elements is what causes scores of ``bad'' and ``fail'' on many inputs.
 As a general rule, the tool performs perfectly on inputs with just boxes (it
 guesses at constraints fairly well), but due to limitations in the handwriting
 recognition code it cannot reliably understand constraints, earning a score of
-``good'' on those examples.
+merely ``good'' on many examples.
 
 \section{Conclusion}
+
+While the user interface parser is far less capable than the ambitious goals set
+out for it, it still does an adequate job on very simple layout files. A few
+eningeering improvements could make it a very capable tool indeed.
+
+As future research work, I would suggest investigating the problem of
+handwriting recognition. For this tool we need a library which can reliably find
+sparse text on a page and identify it. Existing off-the-shelf solutions seem
+insufficient. Commercial solutions exist, but the research and development
+community could surely benefit from an openly available toolset.
+
+The most difficult part of this project was to optimize the very deep pipeline I
+implemented. Even if each step in the tool is 99 percent accurate, the overall
+pipeline still has very low quality. Each step has to be able to handle
+imperfections from its predecessors.
+
+The most important technique I used which improved recognition quality was the
+independent voting step described in \autoref{sec:element-detection}. This had
+two primary benefits. First, it is very robust to error: even if one line makes
+an incorrect vote, its neighbors will typically place correct votes on its
+behalf. Second, it gives a clear objective function to the next pipeline step:
+explain as many votes as possible. The votes do not come with an associated
+confidence, but I predict that adding one might improve quality even further.
 
 \bibliography{bibliography}{}
 \bibliographystyle{unsrt}
