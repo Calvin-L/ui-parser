@@ -2,8 +2,8 @@
 #include <cstdlib>
 #include <cmath>
 #include <iostream>
-#include <tesseract/baseapi.h>
-#include <leptonica/allheaders.h>
+#include <baseapi.h>     // Tesseract
+#include <allheaders.h>  // Leptonica
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 

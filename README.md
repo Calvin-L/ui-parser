@@ -5,8 +5,8 @@
 You will need the following:
 
  - opencv (>= 2.4.11)
- - tesseract (>= 3.03rc1_3)
- - leptonica (>= 1.71)
+ - tesseract (>= 3.04.01)
+ - leptonica (>= 1.72)
  - pkg-config (with package files for the aforementioned libraries)
  - a C++11 capable compiler
 
