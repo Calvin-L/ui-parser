@@ -28,7 +28,7 @@ parse-layout: $(SOURCES:.cpp=.o)
 	$(CXX) $(LDFLAGS) $^ -o $@
 
 %.d: %.cpp
-	$(CPP) $(CXXFLAGS) -M -MP -MT $(<:.cpp=.o) $< | sed -E 's_^([^:]+):_\1 $(@:.o=.d):_' >$@
+	$(CPP) $(CXXFLAGS) -M -MP -MT '$(<:.cpp=.o) $(<:.cpp=.d)' $< >$@
 
 %.html: %.png parse-layout
 	./parse-layout --no-debug $< >$@
